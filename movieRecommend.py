@@ -28,6 +28,13 @@ def insertUserListsIntoProducts(userDataframe,userID,userColumn,productDataframe
           index = int(product)-1
           productDataframe.at[index,insertColumn] = productData.at[index,insertColumn] + 1
 
+def calculatePurchaseRate(productDataframe):
+  for productIndex in productDataframe.index:
+    views = productDataframe.at[productIndex, "views"]
+    purchases = productDataframe.at[productIndex, "purchases"]
+    if(views != 0):
+      productDataframe.at[productIndex, "purchaseRate"] = purchases / views
+
 #generates Dataframe with most viewed and best rated Products
 # @userDataframe:df to read user data from
 # @productDataframe:df to read movie data from
@@ -44,8 +51,11 @@ def getBestProducts(userDataframe, productDataframe, showData, doSave, savePath)
     insertUserListsIntoProducts(userDataframe,userID,"viewed",productDataframe,"views")
     insertUserListsIntoProducts(userDataframe,userID,"purchased",productDataframe,"purchases")
 
+  productDataframe["purchaseRate"] = NaN
+  calculatePurchaseRate(productDataframe)
+
   #sort generated data
-  bestProductData = productDataframe.sort_values(["purchases","rating"], ascending=[False,False])
+  bestProductData = productDataframe.sort_values(["purchaseRate","purchases","rating"], ascending=[False,False,False])
   
   #reduce generated data
   out = bestProductData.drop(bestProductData.loc[:,"year":"keyword5"].columns, axis = 1)
@@ -176,9 +186,9 @@ userSessionData = pandas.read_csv("Movie product data\\CurrentUserSession.txt", 
   names=["productID","recommendedProducts"])
 
 #calculates most viewed and highest ranking movies
-print("Calculating most viewed Movies...")
+print("Calculating best Movies...")
 #boolean1: showData, boolean2: saveData
-getBestProducts(userData, productData, True, False, "Movie product data\\bestProducts.txt", )
+getBestProducts(userData, productData, True, True, "Movie product data\\bestProducts.txt", )
 print("Done. \r\n")
 
 #calculates top 5 related products
